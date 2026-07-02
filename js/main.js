@@ -1,5 +1,5 @@
 /* ============================================================
-   Magdalena & Albert — logika strony
+   Natalia & Paweł — logika strony
    - animacja intro "Wzięliśmy ślub" + płatki
    - nawigacja / reveal przy scrollu
    - wgrywanie zdjęć + galeria (localStorage lub backend)
@@ -24,12 +24,12 @@
      jawny; bezpieczeństwo dają POLITYKI (RLS) w panelu Supabase, nie
      ukrywanie klucza.
      -------------------------------------------------------- */
-  var SUPABASE_URL = "https://sjzdoloqtfeeshbzvlqu.supabase.co";
-  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqemRvbG9xdGZlZXNoYnp2bHF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5NzY2MTAsImV4cCI6MjA5ODU1MjYxMH0.qZjAzgfnSg2l-vH0Aj2lePh0mcZeBqmHNCyy-Dssm0I";      // ⬅️ WKLEJ tu klucz "anon public" (Settings → API Keys)
+  var SUPABASE_URL = "";           // ⬅️ WKLEJ tu Project URL (Settings → API)
+  var SUPABASE_ANON_KEY = "";      // ⬅️ WKLEJ tu klucz "anon public" (Settings → API Keys)
   var SUPABASE_BUCKET = "wedding-photos";
 
   var GALLERY_ENDPOINT = null;     // alternatywnie: adres własnego API
-  var STORAGE_KEY = "ma_wedding_gallery_v1";
+  var STORAGE_KEY = "np_wedding_gallery_v1";
   var MAX_EDGE = 2000;             // maks. dłuższy bok zapisywanego zdjęcia (px)
   var JPEG_QUALITY = 0.86;
   var MAX_UPLOAD_BYTES = 20 * 1024 * 1024;  // odrzuć pliki > 20 MB (przed skalowaniem)
@@ -510,14 +510,14 @@
 
     ctx.fillStyle = "#6f4e32";
     ctx.font = "600 34px 'Cormorant Garamond', Georgia, serif";
-    ctx.fillText("Magdalena & Albert", W / 2, 66 + qrSize + 46);
+    ctx.fillText("Natalia & Paweł", W / 2, 66 + qrSize + 46);
 
     ctx.fillStyle = "#7d6a54";
     ctx.font = "500 20px Montserrat, sans-serif";
-    ctx.fillText("10.07.2026", W / 2, 66 + qrSize + 80);
+    ctx.fillText("DD.MM.RRRR", W / 2, 66 + qrSize + 80);
 
     var a = document.createElement("a");
-    a.download = "kod-qr-magdalena-albert.png";
+    a.download = "kod-qr-natalia-pawel.png";
     a.href = c.toDataURL("image/png");
     a.click();
   }

@@ -1,6 +1,6 @@
-# 💍 Magdalena & Albert — strona ślubna
+# 💍 Natalia & Paweł — strona ślubna
 
-Nowoczesna, elegancka strona weselna (10.07.2026) z:
+Nowoczesna, elegancka strona weselna (DD.MM.RRRR) z:
 
 - ✨ **animacją powitalną** „Wzięliśmy ślub!” ze spadającymi płatkami i obrączkami,
 - 🖼️ **Waszym zdjęciem jako tłem** (z nowoczesną, delikatną przezroczystością i przyciemnieniem dla czytelności),
@@ -14,22 +14,26 @@ np. na **GitHub Pages**.
 
 ---
 
-## 1. Dodaj swoje zdjęcie w tle
+## 1. Dodaj swoje zdjęcia
 
-Wrzuć swoje zdjęcie do folderu `images/` pod nazwą **`couple.jpg`**:
+W sekcji powitalnej (hero) są **dwa kadry** — na start pokazują neutralny
+placeholder (`images/placeholder.svg`). Aby wstawić własne zdjęcia:
 
+1. Wrzuć swoje pliki do folderu `images/` (np. `hero-main.jpg` i `hero-sub.jpg`).
+2. W `index.html`, w sekcji `class="hero__photos"`, podmień `src` obu obrazków:
+
+```html
+<figure class="photo photo--main">
+  <img src="images/hero-main.jpg" width="..." height="..." alt="Zdjęcie pary" ... />
+</figure>
+<figure class="photo photo--sub">
+  <img src="images/hero-sub.jpg" width="..." height="..." alt="Zdjęcie pary" ... />
+</figure>
 ```
-images/couple.jpg
-```
 
-Strona **sama** je wykryje i ustawi jako tło sekcji powitalnej (zamiast placeholdera).
-Obsługiwane nazwy: `couple.jpg`, `couple.jpeg`, `couple.png`, `couple.webp`.
-
-> Wskazówka: najlepsze będzie zdjęcie pionowe (portretowe) o dobrej jakości.
-> Kadr jest ustawiony na okolice twarzy (`background-position: center 28%`) —
-> jeśli chcesz to zmienić, edytuj `.hero__bg` w `css/style.css`.
-
-Dopóki nie dodasz zdjęcia, w tle pokazuje się elegancki placeholder (`images/couple.svg`).
+> Wskazówka: najlepsze będą zdjęcia pionowe (portretowe) o dobrej jakości.
+> Uzupełnij `width`/`height` prawdziwymi wymiarami pliku, aby uniknąć przeskoku
+> układu podczas ładowania.
 
 ---
 
@@ -39,7 +43,7 @@ Dopóki nie dodasz zdjęcia, w tle pokazuje się elegancki placeholder (`images/
 2. W sekcji *Build and deployment* wybierz **Deploy from a branch**.
 3. Ustaw branch (np. `main`) i katalog `/root`, zapisz.
 4. Po chwili strona będzie dostępna pod adresem typu:
-   `https://albizaw.github.io/weedingm-z/`
+   `https://twoj-login.github.io/nazwa-repo/`
 
 Ten sam adres wpisz w generatorze kodu QR (patrz niżej).
 
@@ -139,13 +143,13 @@ API powinno obsługiwać:
 ## 5. Struktura projektu
 
 ```
-index.html          – strona
-css/style.css       – wygląd (paleta: noc + róż + złoto)
-js/main.js          – animacje, upload, galeria, lightbox, QR
-js/qrcode.js        – generator kodu QR (MIT, Kazuhiko Arase) + wrapper
-images/couple.svg   – placeholder tła (podmień na images/couple.jpg)
+index.html            – strona
+css/style.css         – wygląd (motyw rustykalny: len + drewno + złoto + szałwia)
+js/main.js            – animacje, upload, galeria, lightbox, QR
+js/qrcode.js          – generator kodu QR (MIT, Kazuhiko Arase) + wrapper
+images/placeholder.svg – placeholder zdjęć w hero (podmień na własne kadry)
 ```
 
 ---
 
-Zrobione z ❤️ dla Magdaleny i Alberta.
+Zrobione z ❤️ dla Natalii i Pawła.

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="2000" viewBox="0 0 1500 2000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="linen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#fffdf6"/>
+      <stop offset="55%" stop-color="#f5ecdb"/>
+      <stop offset="100%" stop-color="#eaddc6"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#bf9550"/>
+      <stop offset="100%" stop-color="#a3792f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1500" height="2000" fill="url(#linen)"/>
+
+  <!-- delikatna ramka -->
+  <rect x="60" y="60" width="1380" height="1880" rx="40" fill="none"
+        stroke="url(#frame)" stroke-width="4" stroke-opacity="0.55"/>
+
+  <!-- ikona aparatu -->
+  <g transform="translate(750,860)" fill="none" stroke="#6f4e32" stroke-opacity="0.5"
+     stroke-width="14" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="-230" y="-150" width="460" height="330" rx="34"/>
+    <path d="M-150 -150 l40 -70 h220 l40 70"/>
+    <circle cx="0" cy="25" r="105"/>
+    <circle cx="0" cy="25" r="48" stroke-opacity="0.35"/>
+  </g>
+
+  <!-- podpis -->
+  <g text-anchor="middle">
+    <text x="750" y="1230" font-family="Georgia, 'Cormorant Garamond', serif"
+          font-size="120" fill="#6f4e32" opacity="0.85">Wasze zdjęcie</text>
+    <text x="750" y="1330" font-family="Arial, sans-serif" font-size="46"
+          letter-spacing="6" fill="#8a5f24" opacity="0.7">TU TRAFI WASZ KADR</text>
+  </g>
+</svg>
