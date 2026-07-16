@@ -1,13 +1,13 @@
 # 💍 Natalia & Paweł — strona ślubna
 
-Nowoczesna, elegancka strona weselna (DD.MM.RRRR) z:
+Nowoczesna, elegancka strona weselna (18.07.2026) z:
 
 - ✨ **animacją powitalną** „Wzięliśmy ślub!” ze spadającymi płatkami i obrączkami,
 - 🖼️ **Waszym zdjęciem jako tłem** (z nowoczesną, delikatną przezroczystością i przyciemnieniem dla czytelności),
-- 🍽️ **pełnym menu weselnym** ułożonym jako oś czasu (godziny + dania),
+- 🕒 **harmonogramem wesela** jako ozdobną osią czasu (godziny + wydarzenia z ikonami),
+- 🍽️ **pełnym menu weselnym** z podziałem na dania (przystawka, zupa, danie główne, I i II kolacja) oraz oznaczeniami dań klasycznych, wegetariańskich i dla dzieci,
 - 📸 **wgrywaniem zdjęć z wesela** przez gości (prosto z telefonu),
-- 🖼️ **galerią** ze zdjęciami (podgląd na pełnym ekranie po kliknięciu),
-- 🔳 **generatorem kodu QR** na stoły — do wydruku.
+- 🖼️ **galerią** ze zdjęciami (podgląd na pełnym ekranie po kliknięciu).
 
 Strona to zwykłe pliki HTML/CSS/JS (bez budowania), więc można ją postawić za darmo
 np. na **GitHub Pages**.
@@ -45,28 +45,11 @@ placeholder (`images/placeholder.svg`). Aby wstawić własne zdjęcia:
 4. Po chwili strona będzie dostępna pod adresem typu:
    `https://twoj-login.github.io/nazwa-repo/`
 
-Ten sam adres wpisz w generatorze kodu QR (patrz niżej).
+Wygenerowany adres udostępnij gościom (np. na zaproszeniach lub karteczkach na stołach) — po wejściu od razu wgrają swoje zdjęcia. 🎉
 
 ---
 
-## 3. Kod QR na stoły
-
-W sekcji **„Kod QR na stoły”** na stronie:
-
-1. Wpisz adres swojej opublikowanej strony (pole podpowiada bieżący adres).
-2. Kliknij **„Wygeneruj kod QR”**.
-3. Kliknij **„Pobierz do druku”** — otrzymasz gotową kartę PNG
-   z kodem, Waszymi imionami i datą. Wydrukuj i połóż na stołach.
-
-Goście po zeskanowaniu trafią na stronę i będą mogli od razu wgrać zdjęcia. 🎉
-
-Kod QR generowany jest **lokalnie w przeglądarce** (biblioteka
-[qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator), licencja MIT) —
-działa też bez internetu i jest w pełni skanowalny.
-
----
-
-## 4. Galeria zdjęć — tryby działania
+## 3. Galeria zdjęć — tryby działania
 
 Strona ma **trzy tryby** galerii (wybierany automatycznie na podstawie konfiguracji
 w `js/main.js`):
@@ -77,7 +60,7 @@ w `js/main.js`):
 | **Supabase** (zalecany) | wypełnisz `SUPABASE_URL` + `SUPABASE_ANON_KEY` | ✅ wspólna galeria — wszyscy goście widzą wszystkie zdjęcia |
 | **Własne API** | ustawisz `GALLERY_ENDPOINT` | wspólna galeria przez własny backend |
 
-### 4a. Wspólna galeria przez Supabase (zalecane) 💛
+### 3a. Wspólna galeria przez Supabase (zalecane) 💛
 
 Darmowe, bez karty, storage + reguły bezpieczeństwa w jednym. Konfiguracja zajmuje
 kilka minut:
@@ -86,24 +69,28 @@ kilka minut:
 Wejdź na [supabase.com](https://supabase.com) → *New project*. Zapisz hasło do bazy.
 
 **2) Utwórz bucket na zdjęcia**
-Menu **Storage** → *New bucket* → nazwa **`wedding-photos`** → zaznacz **Public bucket**
+Menu **Storage** → *New bucket* → nazwa **`natalia-pawel-photos`** → zaznacz **Public bucket**
 → *Create*.
 
 **3) Ustaw reguły bezpieczeństwa (policies)**
-Menu **Storage → Policies** przy buckecie `wedding-photos` dodaj dwie polityki dla
+Menu **Storage → Policies** przy buckecie `natalia-pawel-photos` dodaj dwie polityki dla
 roli `anon` (można też przez SQL Editor — wklej poniższe):
 
 ```sql
--- Goście mogą DODAWAĆ zdjęcia do bucketu wedding-photos
-create policy "wedding upload"
+-- Goście mogą DODAWAĆ zdjęcia do bucketu natalia-pawel-photos
+create policy "natalia pawel upload"
   on storage.objects for insert to anon
-  with check ( bucket_id = 'wedding-photos' );
+  with check ( bucket_id = 'natalia-pawel-photos' );
 
 -- Goście mogą LISTOWAĆ/oglądać zdjęcia z tego bucketu
-create policy "wedding read"
+create policy "natalia pawel read"
   on storage.objects for select to anon
-  using ( bucket_id = 'wedding-photos' );
+  using ( bucket_id = 'natalia-pawel-photos' );
 ```
+
+> Nazwy polityk (`natalia pawel upload` / `read`) są celowo unikalne — jeśli w tym
+> samym projekcie Supabase jest już bucket innej pary z własnymi politykami,
+> identyczna nazwa spowodowałaby błąd „policy already exists”.
 
 > Uwaga bezpieczeństwo: świadomie **nie** dodajemy polityk `update`/`delete` dla gości —
 > nikt nie może kasować ani podmieniać cudzych zdjęć. Moderację (usuwanie spamu)
@@ -117,7 +104,7 @@ Menu **Project Settings → API**: skopiuj **Project URL** oraz klucz **`anon` `
 ```js
 var SUPABASE_URL = "https://twoj-projekt.supabase.co";
 var SUPABASE_ANON_KEY = "eyJhbGciOi...";   // klucz anon public
-var SUPABASE_BUCKET = "wedding-photos";
+var SUPABASE_BUCKET = "natalia-pawel-photos";
 ```
 
 Gotowe — po wgraniu na GitHub Pages wszyscy goście dzielą jedną galerię. Klucz
@@ -125,7 +112,7 @@ Gotowe — po wgraniu na GitHub Pages wszyscy goście dzielą jedną galerię. K
 zapewniają polityki z kroku 3, a nie ukrywanie klucza. Dodatkowo strona odrzuca
 pliki większe niż 20 MB i skaluje zdjęcia przed wysłaniem.
 
-### 4b. Alternatywnie: własne API
+### 3b. Alternatywnie: własne API
 
 Zamiast Supabase możesz ustawić `GALLERY_ENDPOINT` na adres własnego backendu:
 
@@ -140,13 +127,12 @@ API powinno obsługiwać:
 
 ---
 
-## 5. Struktura projektu
+## 4. Struktura projektu
 
 ```
 index.html            – strona
 css/style.css         – wygląd (motyw rustykalny: len + drewno + złoto + szałwia)
-js/main.js            – animacje, upload, galeria, lightbox, QR
-js/qrcode.js          – generator kodu QR (MIT, Kazuhiko Arase) + wrapper
+js/main.js            – animacje, upload, galeria, lightbox
 images/placeholder.svg – placeholder zdjęć w hero (podmień na własne kadry)
 ```
 

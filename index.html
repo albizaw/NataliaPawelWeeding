@@ -4,18 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f0d10" />
-  <title>Natalia &amp; Paweł — DD.MM.RRRR</title>
-  <meta name="description" content="Strona ślubna Natalii i Pawła. Menu weselne, galeria zdjęć i miejsce, w którym możesz podzielić się swoimi zdjęciami z wesela." />
+  <title>Natalia &amp; Paweł — 18.07.2026</title>
+  <meta name="description" content="Strona ślubna Natalii i Pawła — 18 lipca 2026. Harmonogram dnia, menu weselne, galeria zdjęć i miejsce, w którym możesz podzielić się swoimi zdjęciami z wesela." />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="Natalia & Paweł — DD.MM.RRRR" />
-  <meta property="og:description" content="Pobierz się z nami wspomnieniami — zobacz menu i wgraj swoje zdjęcia z wesela." />
+  <meta property="og:title" content="Natalia & Paweł — 18.07.2026" />
+  <meta property="og:description" content="Świętuj z nami 18 lipca 2026 — poznaj harmonogram dnia, menu weselne i wgraj swoje zdjęcia z wesela." />
   <meta property="og:type" content="website" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="preload" as="image" href="images/hero-main.jpg" fetchpriority="high" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%8D%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
@@ -31,7 +32,7 @@
       <p class="intro__eyebrow">Z radością ogłaszamy, że</p>
       <p class="intro__title">Wzięliśmy ślub!</p>
       <p class="intro__names">Natalia &amp; Paweł</p>
-      <p class="intro__date">DD miesiąca RRRR</p>
+      <p class="intro__date">18 lipca 2026</p>
     </div>
     <button id="intro-skip" class="intro__skip" type="button">Wejdź&nbsp;→</button>
   </div>
@@ -43,9 +44,10 @@
     <header class="nav" id="nav">
       <a href="#hero" class="nav__brand">N&nbsp;&amp;&nbsp;P</a>
       <nav class="nav__links" aria-label="Nawigacja główna">
+        <a href="#harmonogram">Harmonogram</a>
         <a href="#menu">Menu</a>
         <a href="#galeria">Galeria</a>
-        <a href="#wgraj">Wgraj zdjęcie</a>
+        <a href="#wgraj">Wgraj</a>
       </nav>
     </header>
 
@@ -65,33 +67,108 @@
           <span>Paweł</span>
         </h1>
         <div class="hero__divider"><span></span>♥<span></span></div>
-        <p class="hero__date">DD&nbsp;·&nbsp;MM&nbsp;·&nbsp;RRRR</p>
+        <p class="hero__date">18&nbsp;·&nbsp;07&nbsp;·&nbsp;2026</p>
         <p class="hero__lead">
           Dwa serca, jedna droga. Z całego serca cieszymy się, że możemy
           świętować ten wyjątkowy dzień razem z Wami.
         </p>
-        <a href="#menu" class="hero__cta">Zobacz menu i galerię</a>
+        <a href="#harmonogram" class="hero__cta">Zobacz plan dnia i menu</a>
       </div>
 
       <div class="hero__photos couple__photos">
-        <!-- Placeholder — podmień src na własne zdjęcie (np. images/hero-main.jpg) -->
         <figure class="photo photo--main">
-          <img src="images/placeholder.svg"
-            width="1500" height="2000"
-            alt="Miejsce na zdjęcie pary"
+          <img src="images/hero-main.jpg"
+            width="1000" height="1333"
+            alt="Natalia i Paweł całują się pod wodospadem"
             fetchpriority="high" decoding="async" />
         </figure>
 
         <figure class="photo photo--sub">
-          <img src="images/placeholder.svg"
-            width="1500" height="2000"
-            alt="Miejsce na zdjęcie pary"
+          <img src="images/hero-sub.jpg"
+            width="850" height="1133"
+            alt="Natalia i Paweł — wspólny portret"
             decoding="async" />
         </figure>
       </div>
     </div>
 
-    <a href="#menu" class="hero__scroll" aria-label="Przewiń w dół"></a>
+    <a href="#harmonogram" class="hero__scroll" aria-label="Przewiń w dół"></a>
+  </section>
+
+  <!-- ===== HARMONOGRAM WESELA ===== -->
+  <section id="harmonogram" class="section timeline-section reveal">
+    <div class="section__head">
+      <p class="section__eyebrow">Plan dnia</p>
+      <h2 class="section__title">Harmonogram wesela</h2>
+      <div class="section__rule"><span></span>♥<span></span></div>
+      <p class="section__lead">Sobota, 18 lipca 2026 — tak będzie wyglądał nasz wspólny dzień. Bawcie się z nami do białego rana!</p>
+    </div>
+
+    <ol class="timeline">
+      <li class="tl-item">
+        <span class="tl-time">15:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">💍</span>
+          <h3 class="tl-name">Ceremonia ślubna</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">17:30</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🍽️</span>
+          <h3 class="tl-name">Obiad weselny</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">18:30</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🥂</span>
+          <h3 class="tl-name">Życzenia</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">19:30</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">💃</span>
+          <h3 class="tl-name">Pierwszy taniec</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">21:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🍲</span>
+          <h3 class="tl-name">I kolacja</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">22:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🎂</span>
+          <h3 class="tl-name">Tort weselny</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">00:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🎉</span>
+          <h3 class="tl-name">Oczepiny</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">01:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🎶</span>
+          <h3 class="tl-name">Vixa party</h3>
+        </div>
+      </li>
+      <li class="tl-item">
+        <span class="tl-time">02:00</span>
+        <div class="tl-main">
+          <span class="tl-node" aria-hidden="true">🌙</span>
+          <h3 class="tl-name">II kolacja</h3>
+        </div>
+      </li>
+    </ol>
   </section>
 
   <!-- ===== MENU WESELNE ===== -->
@@ -100,21 +177,119 @@
       <p class="section__eyebrow">Smacznego</p>
       <h2 class="section__title">Menu weselne</h2>
       <div class="section__rule"><span></span>♥<span></span></div>
+      <p class="section__lead">Dla każdego coś dobrego — przy większości dań przygotowaliśmy wersję klasyczną, wegetariańską i dla najmłodszych.</p>
     </div>
+
+    <ul class="menu-legend" aria-label="Legenda oznaczeń dań">
+      <li><span class="dish__tag dish__tag--classic" aria-hidden="true"></span> Danie klasyczne</li>
+      <li><span class="dish__tag dish__tag--vege" aria-hidden="true">🌿</span> Wegetariańskie</li>
+      <li><span class="dish__tag dish__tag--kids" aria-hidden="true">🧒</span> Dla dzieci</li>
+    </ul>
 
     <div class="menu-list">
 
-      <!-- ===== PRZYKŁADOWY WPIS — skopiuj ten blok dla każdego dania ===== -->
       <article class="course">
         <header class="course__head">
-          <span class="course__time">00:00</span>
-          <h3 class="course__name">Nazwa dania</h3>
+          <h3 class="course__name">Przystawka</h3>
         </header>
         <div class="course__body">
-          <p class="course__group">Grupa (np. Zupa) — opcjonalnie</p>
           <ul>
-            <li>Pozycja menu do uzupełnienia</li>
-            <li>Kolejna pozycja do uzupełnienia</li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--vege" role="img" aria-label="Danie wegetariańskie">🌿</span>
+              <span class="dish__text">Bruschetta z salsą z bazylii i grejpfruta, guacamole i świeżymi ziołami</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--kids" role="img" aria-label="Danie dla dzieci">🧒</span>
+              <span class="dish__text">Mini burger drobiowy</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="course">
+        <header class="course__head">
+          <h3 class="course__name">Zupa</h3>
+        </header>
+        <div class="course__body">
+          <ul>
+            <li class="dish">
+              <span class="dish__tag dish__tag--classic" role="img" aria-label="Danie klasyczne"></span>
+              <span class="dish__text">Rosół gotowany na trzech mięsach z warzywami i makaronem</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--vege" role="img" aria-label="Danie wegetariańskie">🌿</span>
+              <span class="dish__text">Krem pomidorowy z mascarpone i bazylią</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--kids" role="img" aria-label="Danie dla dzieci">🧒</span>
+              <span class="dish__text">Rosołek z makaronem i marchewką</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="course">
+        <header class="course__head">
+          <h3 class="course__name">Danie główne</h3>
+        </header>
+        <div class="course__body">
+          <ul>
+            <li class="dish">
+              <span class="dish__tag dish__tag--classic" role="img" aria-label="Danie klasyczne"></span>
+              <span class="dish__text">Pierś z kaczki z puree z batatów i pietruszki, piklowana śliwka, mus z zielonego jabłka, sos pomarańczowy</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--vege" role="img" aria-label="Danie wegetariańskie">🌿</span>
+              <span class="dish__text">Strudel grzybowy z sosem kasztanowym, smażony borowik, winegret z rokitnika</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--kids" role="img" aria-label="Danie dla dzieci">🧒</span>
+              <span class="dish__text">Nuggetsy z kurczaka w panierce panko z frytkami i surówką z marchewki, ketchup</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="course">
+        <header class="course__head">
+          <h3 class="course__name">I kolacja</h3>
+        </header>
+        <div class="course__body">
+          <ul>
+            <li class="dish">
+              <span class="dish__tag dish__tag--classic" role="img" aria-label="Danie klasyczne"></span>
+              <span class="dish__text">Żeberka duszone w sosie BBQ z puree chrzanowym i kapustą zasmażaną</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--vege" role="img" aria-label="Danie wegetariańskie">🌿</span>
+              <span class="dish__text">Dyniowe gnocchi zapiekane z serem feta i granatem z sosem pesto</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--kids" role="img" aria-label="Danie dla dzieci">🧒</span>
+              <span class="dish__text">Mini pizza z szynką i serem mozzarella</span>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="course">
+        <header class="course__head">
+          <h3 class="course__name">II kolacja</h3>
+        </header>
+        <div class="course__body">
+          <ul>
+            <li class="dish">
+              <span class="dish__tag dish__tag--classic" role="img" aria-label="Danie klasyczne"></span>
+              <span class="dish__text">Barszcz czerwony z pasztecikiem z kapustą</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--vege" role="img" aria-label="Danie wegetariańskie">🌿</span>
+              <span class="dish__text">Warzywny barszcz czerwony z pasztecikiem z kapustą</span>
+            </li>
+            <li class="dish">
+              <span class="dish__tag dish__tag--kids" role="img" aria-label="Danie dla dzieci">🧒</span>
+              <span class="dish__text">Pulpeciki drobiowe z makaronem spaghetti</span>
+            </li>
           </ul>
         </div>
       </article>
@@ -154,46 +329,22 @@
     </div>
 
     <div class="gallery__grid" id="gallery-grid"></div>
-    <p class="gallery__empty" id="gallery-empty">
-      Galeria jest jeszcze pusta — bądź pierwszą osobą, która doda zdjęcie&nbsp;✨
-    </p>
-  </section>
-
-  <!-- ===== KOD QR ===== -->
-  <section id="qr" class="section qr reveal">
-    <div class="section__head">
-      <p class="section__eyebrow">Dla gości</p>
-      <h2 class="section__title">Kod QR na stoły</h2>
-      <div class="section__rule"><span></span>♥<span></span></div>
-      <p class="section__lead">
-        Wygeneruj kod QR z adresem tej strony i wydrukuj go na karteczki na stoły.
-        Goście zeskanują go telefonem i od razu wgrają swoje zdjęcia.
+    <div class="gallery__empty" id="gallery-empty">
+      <div class="gallery__empty-icon" aria-hidden="true">📷</div>
+      <p class="gallery__empty-title">Galeria czeka na pierwsze zdjęcie</p>
+      <p class="gallery__empty-text">
+        Nikt jeszcze nic tu nie dodał — bądź pierwszą osobą, która uwieczni ten wyjątkowy dzień&nbsp;✨
       </p>
-    </div>
-
-    <div class="qr__panel">
-      <div class="qr__form">
-        <label for="qr-url">Adres strony</label>
-        <input id="qr-url" type="url" inputmode="url" placeholder="https://twoja-strona.pl" />
-        <button id="qr-generate" type="button" class="btn">Wygeneruj kod QR</button>
-        <button id="qr-download" type="button" class="btn btn--ghost" hidden>Pobierz do druku</button>
-      </div>
-      <div class="qr__preview" id="qr-preview">
-        <div class="qr__card" id="qr-card">
-          <p class="qr__card-top">Zeskanuj &amp; dodaj zdjęcie</p>
-          <canvas id="qr-canvas" width="240" height="240"></canvas>
-          <p class="qr__card-names">Natalia &amp; Paweł</p>
-          <p class="qr__card-date">DD.MM.RRRR</p>
-        </div>
-      </div>
+      <a href="#wgraj" class="btn gallery__empty-cta">Dodaj pierwsze zdjęcie</a>
     </div>
   </section>
+
     </main>
 
     <!-- ===== STOPKA ===== -->
     <footer class="footer">
       <p class="footer__names">Natalia &amp; Paweł</p>
-      <p class="footer__date">DD miesiąca RRRR</p>
+      <p class="footer__date">18 lipca 2026</p>
       <p class="footer__thanks">Dziękujemy, że świętujecie z nami ♥</p>
     </footer>
   </div><!-- /#site -->
@@ -207,7 +358,6 @@
     <p class="lightbox__counter" id="lightbox-counter" aria-live="polite"></p>
   </div>
 
-  <script src="js/qrcode.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

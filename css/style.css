@@ -465,6 +465,77 @@ img { max-width: 100%; display: block; }
 .couple__photos:hover .photo--sub { transform: rotate(-2deg) translateY(-4px); }
 
 /* ============================================================
+   HARMONOGRAM — oś czasu (godzina + wydarzenie z ikoną)
+   ============================================================ */
+.timeline {
+  position: relative;
+  list-style: none;
+  /* szerokość dopasowana do treści, wyśrodkowana jako całość pod tytułem */
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+/* Ciągła, złocista linia biegnąca przez środki węzłów */
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 82px;
+  width: 2px;
+  transform: translateX(-1px);
+  background: linear-gradient(180deg, transparent, var(--gold) 7%, var(--gold) 93%, transparent);
+}
+.tl-item {
+  display: grid;
+  grid-template-columns: 56px max-content;
+  column-gap: 26px;
+  align-items: center;
+  padding: 14px 0;
+}
+.tl-time {
+  grid-column: 1;
+  text-align: right;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: 1.24rem;
+  letter-spacing: .04em;
+  color: var(--gold-deep);
+}
+.tl-main {
+  grid-column: 2;
+  position: relative;
+  padding-left: 44px;
+}
+.tl-node {
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px; height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  line-height: 1;
+  background: radial-gradient(circle at 32% 28%, #fffaf0, #f2e2c4 70%);
+  border: 1.5px solid rgba(191,149,80,.55);
+  box-shadow: 0 6px 16px rgba(163,121,47,.24), inset 0 0 0 4px var(--bg);
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+}
+.tl-name {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: clamp(1.3rem, 4.5vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--wood);
+}
+.tl-item:hover .tl-node {
+  transform: translate(-50%, -50%) scale(1.12);
+  box-shadow: 0 10px 24px rgba(163,121,47,.4), inset 0 0 0 4px var(--bg);
+}
+
+/* ============================================================
    MENU — eleganckie karty (godzina jako złota plakietka)
    ============================================================ */
 .menu { background: linear-gradient(180deg, transparent, rgba(234,221,198,.4), transparent); }
@@ -528,13 +599,73 @@ img { max-width: 100%; display: block; }
   font-weight: 500;
 }
 .course__body ul { margin: 0; padding: 0; list-style: none; }
-.course__body li {
-  padding: 5px 0;
+
+/* Pojedyncze danie: znacznik (klasyczne / wege / dzieci) + opis */
+.dish {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 14px;
+  align-items: start;
+  text-align: left;
+  padding: 13px 0;
+}
+.dish + .dish { border-top: 1px dashed rgba(111,78,50,.16); }
+.dish__text {
   color: var(--text);
   font-weight: 400;
   font-size: 1.02rem;
+  line-height: 1.5;
 }
-.course__body li + li { border-top: 1px dashed rgba(111,78,50,.12); }
+
+/* Okrągły znacznik diety */
+.dish__tag {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  font-size: 1.02rem;
+  line-height: 1;
+  margin-top: -2px;
+}
+.dish__tag--vege    { background: rgba(138,151,107,.20); }
+.dish__tag--kids    { background: rgba(181,118,79,.16); }
+.dish__tag--classic {
+  position: relative;
+  background: rgba(191,149,80,.18);
+}
+.dish__tag--classic::before {
+  content: "";
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--gold-deep);
+  box-shadow: 0 0 0 3px rgba(191,149,80,.22);
+}
+
+/* Legenda oznaczeń nad listą dań */
+.menu-legend {
+  list-style: none;
+  margin: 0 auto 46px;
+  padding: 14px 26px;
+  max-width: fit-content;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 26px;
+  background: var(--panel);
+  border: 1px solid rgba(191,149,80,.24);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(74,48,22,.08);
+}
+.menu-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: .84rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+.menu-legend .dish__tag { width: 26px; height: 26px; font-size: .9rem; margin: 0; }
 
 /* ============================================================
    UPLOADER
@@ -632,32 +763,52 @@ img { max-width: 100%; display: block; }
   border-top-color: var(--gold-text);
   animation: spin .7s linear infinite;
 }
-.gallery__empty { text-align: center; color: var(--muted); margin-top: 24px; }
+/* Pusta galeria — zachęcający stan zamiast pojedynczej linijki tekstu */
+.gallery__empty {
+  max-width: 460px;
+  margin: 8px auto 0;
+  padding: clamp(32px, 6vw, 48px) clamp(22px, 5vw, 34px);
+  text-align: center;
+  background: linear-gradient(180deg, var(--panel), #fbf4e6);
+  border: 1.5px dashed rgba(191,149,80,.45);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px rgba(74,48,22,.07);
+}
 .gallery__empty.is-hidden { display: none; }
+.gallery__empty-icon {
+  width: 68px; height: 68px;
+  margin: 0 auto 18px;
+  display: grid; place-items: center;
+  font-size: 1.9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fffaf0, #f0e0c2 72%);
+  border: 1.5px solid rgba(191,149,80,.5);
+  box-shadow: 0 6px 16px rgba(163,121,47,.2);
+}
+.gallery__empty-title {
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: clamp(1.4rem, 4.5vw, 1.8rem);
+  line-height: 1.2;
+  color: var(--wood);
+  margin: 0 0 8px;
+}
+.gallery__empty-text {
+  color: var(--muted);
+  font-size: 1rem;
+  margin: 0 auto 22px;
+  max-width: 34ch;
+}
+.gallery__empty-cta {
+  display: inline-block;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(163,121,47,.32);
+}
+.gallery__empty-cta:hover { transform: translateY(-2px); }
 
 /* ============================================================
-   QR
+   PRZYCISKI — złota pigułka (m.in. CTA w pustej galerii)
    ============================================================ */
-.qr__panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  align-items: center;
-  max-width: 820px;
-  margin: 0 auto;
-}
-.qr__form { display: flex; flex-direction: column; gap: 12px; }
-.qr__form label { font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-.qr__form input {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 14px 16px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 1rem;
-}
-.qr__form input:focus { outline: none; border-color: var(--gold); }
 .btn {
   padding: 14px 22px;
   border-radius: 999px;
@@ -672,21 +823,6 @@ img { max-width: 100%; display: block; }
 }
 .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(163,121,47,.4); }
 .btn--ghost { background: transparent; border: 1px solid var(--line); color: var(--wood); }
-
-.qr__preview { display: grid; place-items: center; }
-.qr__card {
-  background: #fffaf0;
-  color: #3c2c1d;
-  border-radius: var(--radius);
-  padding: 26px 30px;
-  text-align: center;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(111,78,50,.14);
-}
-.qr__card-top { margin: 0 0 14px; font-size: .8rem; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-text); }
-.qr__card canvas { margin: 0 auto; border-radius: 8px; image-rendering: pixelated; }
-.qr__card-names { font-family: "Cormorant Garamond", serif; font-weight: 600; font-size: 1.4rem; margin: 14px 0 2px; color: var(--wood); }
-.qr__card-date { margin: 0; letter-spacing: .2em; font-size: .85rem; color: var(--muted); }
 
 /* ============================================================
    STOPKA — rustykalny akcent drewna
@@ -770,15 +906,27 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 720px) {
   .nav__brand { font-size: 1.25rem; }
-  .qr__panel { grid-template-columns: 1fr; }
-  .timeline::before { left: 70px; }
-  .course { grid-template-columns: 62px 1fr; gap: 16px; }
-  .course::before { left: 66px; }
-  .course__time { font-size: 1rem; }
+
+  /* Oś czasu — zwężamy kolumnę godziny i przesuwamy linię */
+  .timeline::before { left: 62px; }
+  .tl-item { grid-template-columns: 44px max-content; column-gap: 18px; }
+  .tl-time { font-size: 1.1rem; }
+  .tl-node { width: 40px; height: 40px; font-size: 1.05rem; }
+  .tl-main { padding-left: 36px; }
 }
 @media (max-width: 420px) {
-  .nav__links { gap: 12px; }
-  .nav__links a { font-size: .72rem; letter-spacing: .06em; }
+  /* Cztery pozycje menu muszą zmieścić się w jednym rzędzie na wąskich telefonach */
+  .nav { padding-left: 14px; padding-right: 14px; }
+  .nav__brand { font-size: 1.15rem; }
+  .nav__links { gap: 11px; }
+  .nav__links a { font-size: .7rem; letter-spacing: .04em; }
+}
+@media (max-width: 360px) {
+  /* Najwęższe telefony (np. 320 px) — jeszcze ciaśniej, by nic się nie ucięło */
+  .nav { padding-left: 10px; padding-right: 10px; }
+  .nav__brand { font-size: 1.05rem; }
+  .nav__links { gap: 8px; }
+  .nav__links a { font-size: .63rem; letter-spacing: .02em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
