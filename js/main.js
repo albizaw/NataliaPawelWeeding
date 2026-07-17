@@ -33,6 +33,7 @@
   var MAX_EDGE = 2000; // maks. dłuższy bok zapisywanego zdjęcia (px)
   var JPEG_QUALITY = 0.86;
   var MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // odrzuć pliki > 20 MB (przed skalowaniem)
+  var MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
   var MODE =
     SUPABASE_URL && SUPABASE_ANON_KEY
@@ -255,48 +256,55 @@
     });
 
     function handleFiles(fileList) {
-      var all = Array.prototype.slice.call(fileList).filter(function (f) {
-        return /^image\//.test(f.type);
-      });
-      if (!all.length) {
-        setStatus("Wybierz proszę pliki graficzne 🙂");
+      var all = Array.prototype.slice.call(fileList);
+      var imageFiles = all.filter(function (f) { return /^image\//.test(f.type); });
+      var videoFiles = all.filter(function (f) { return /^video\//.test(f.type); });
+
+      if (!imageFiles.length && !videoFiles.length) {
+        setStatus("Wybierz pliki ze zdjęciami lub filmami 🙂");
         return;
       }
-      var files = all.filter(function (f) {
-        return f.size <= MAX_UPLOAD_BYTES;
-      });
-      var skipped = all.length - files.length;
-      if (!files.length) {
-        setStatus("Zdjęcia są za duże (max 20 MB). Spróbuj mniejsze 🙂");
+
+      var images = imageFiles.filter(function (f) { return f.size <= MAX_UPLOAD_BYTES; });
+      var videos = videoFiles.filter(function (f) { return f.size <= MAX_VIDEO_BYTES; });
+      var skipped = (imageFiles.length - images.length) + (videoFiles.length - videos.length);
+      var total = images.length + videos.length;
+
+      if (!total) {
+        setStatus("Pliki za duże (zdjęcia max 20 MB, filmy max 50 MB). Spróbuj mniejsze 🙂");
         return;
       }
+
       setStatus(
-        "Przetwarzam " +
-          files.length +
-          " zdjęcie(a)…" +
-          (skipped ? " (" + skipped + " pominięto — za duże)" : ""),
-        true,
+        "Przetwarzam " + total + " plik(ów)…" +
+        (skipped ? " (" + skipped + " pominięto — za duże)" : ""),
+        true
       );
-      var done = 0,
-        ok = 0;
-      files.forEach(function (file) {
+
+      var done = 0, ok = 0;
+      function checkDone() {
+        if (done === total) {
+          setStatus(
+            ok ? "Dodano " + ok + " plik(ów)! Dziękujemy 💛" : "Nie udało się dodać plików.",
+            false
+          );
+          setTimeout(function () { setStatus("", false); }, 4000);
+        }
+      }
+
+      images.forEach(function (file) {
         processImage(file, function (dataUrl) {
           done++;
-          if (dataUrl) {
-            ok++;
-            Gallery.add(dataUrl);
-          }
-          if (done === files.length) {
-            setStatus(
-              ok
-                ? "Dodano " + ok + " zdjęcie(a)! Dziękujemy 💛"
-                : "Nie udało się dodać zdjęć.",
-              false,
-            );
-            setTimeout(function () {
-              setStatus("", false);
-            }, 4000);
-          }
+          if (dataUrl) { ok++; Gallery.add(dataUrl); }
+          checkDone();
+        });
+      });
+
+      videos.forEach(function (file) {
+        Gallery.addVideo(file, function (success) {
+          done++;
+          if (success) ok++;
+          checkDone();
         });
       });
     }
@@ -382,18 +390,18 @@
         cb(
           (rows || [])
             .filter(function (o) {
-              // pomiń placeholder pustego folderu (.emptyFolderPlaceholder),
-              // pliki ukryte oraz wszystko, co nie jest obrazkiem
               return (
                 o &&
                 o.id &&
                 o.name &&
                 o.name.charAt(0) !== "." &&
-                /\.(jpe?g|png|gif|webp|avif|heic)$/i.test(o.name)
+                (/\.(jpe?g|png|gif|webp|avif|heic)$/i.test(o.name) ||
+                 /\.(mp4|mov|webm|m4v|avi)$/i.test(o.name))
               );
             })
             .map(function (o) {
-              return { id: o.name, src: sbPublicUrl(o.name) };
+              var isVideo = /\.(mp4|mov|webm|m4v|avi)$/i.test(o.name);
+              return { id: o.name, src: sbPublicUrl(o.name), type: isVideo ? "video" : "image" };
             }),
         );
       })
@@ -433,6 +441,37 @@
     )
       .then(function (r) {
         cb(r.ok ? { id: name, src: sbPublicUrl(name) } : null);
+      })
+      .catch(function () {
+        cb(null);
+      });
+  }
+  function sbUploadVideo(file, cb) {
+    var ext = (file.name.match(/\.[^.]+$/) || [".mp4"])[0].toLowerCase();
+    var name =
+      "video-" +
+      Date.now() +
+      "-" +
+      Math.random().toString(36).slice(2, 8) +
+      ext;
+    fetch(
+      SUPABASE_URL +
+        "/storage/v1/object/" +
+        SUPABASE_BUCKET +
+        "/" +
+        encodeURIComponent(name),
+      {
+        method: "POST",
+        headers: sbHeaders({
+          "Content-Type": file.type || "video/mp4",
+          "cache-control": "3600",
+          "x-upsert": "false",
+        }),
+        body: file,
+      },
+    )
+      .then(function (r) {
+        cb(r.ok ? { id: name, src: sbPublicUrl(name), type: "video" } : null);
       })
       .catch(function () {
         cb(null);
@@ -495,20 +534,21 @@
       var entry = {
         id: "p" + Date.now() + "_" + Math.round(performance.now()),
         src: dataUrl,
+        type: "image",
       };
       if (MODE === "supabase") {
-        // pokaż od razu (optymistycznie), po wysłaniu podmień na wersję z serwera
         entry.pending = true;
         items.push(entry);
         render();
         sbUpload(dataUrl, function (res) {
           var i = items.indexOf(entry);
           if (res) {
+            res.type = "image";
             if (i >= 0) items[i] = res;
             else items.push(res);
           } else if (i >= 0) {
             items.splice(i, 1);
-          } // nie udało się — cofnij podgląd
+          }
           render();
         });
       } else if (MODE === "endpoint") {
@@ -521,13 +561,42 @@
             load();
           })
           .catch(function () {});
-        // optymistycznie pokaż od razu
         items.push(entry);
         render();
       } else {
         items.push(entry);
         persistLocal();
         render();
+      }
+    }
+
+    function addVideo(file, cb) {
+      if (MODE === "supabase") {
+        var objUrl = URL.createObjectURL(file);
+        var entry = {
+          id: "v" + Date.now() + "_" + Math.round(performance.now()),
+          src: objUrl,
+          type: "video",
+          pending: true,
+          _objUrl: objUrl,
+        };
+        items.push(entry);
+        render();
+        sbUploadVideo(file, function (res) {
+          var i = items.indexOf(entry);
+          URL.revokeObjectURL(objUrl);
+          if (res) {
+            if (i >= 0) items[i] = res;
+            else items.push(res);
+            if (cb) cb(true);
+          } else {
+            if (i >= 0) items.splice(i, 1);
+            if (cb) cb(false);
+          }
+          render();
+        });
+      } else {
+        if (cb) cb(false);
       }
     }
 
@@ -546,37 +615,50 @@
     function render() {
       if (!grid) return;
       grid.innerHTML = "";
-      var order = items.slice().reverse(); // kolejność wyświetlania (najnowsze pierwsze)
-      order.forEach(function (it) {
+      var order = items.slice().reverse();
+      order.forEach(function (it, idx) {
         var fig = document.createElement("figure");
         fig.className = "gallery__item";
-        var img = document.createElement("img");
-        img.loading = "lazy";
-        img.src = it.src;
-        img.alt = "Zdjęcie z wesela";
 
-        // Zdjęcie nie istnieje (np. usunięte z bucketu → 404) lub jest uszkodzone:
-        // usuń kafelek i pozycję z listy, żeby nie pokazywać „zepsutego" obrazka,
-        // i odśwież stan pustej galerii.
-        img.addEventListener("error", function () {
-          items = items.filter(function (x) {
-            return x.id !== it.id;
+        if (it.type === "video") {
+          fig.classList.add("gallery__item--video");
+          var vid = document.createElement("video");
+          vid.preload = "metadata";
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.src = it.src + "#t=0.5";
+          fig.appendChild(vid);
+
+          var playIcon = document.createElement("span");
+          playIcon.className = "gallery__play";
+          playIcon.setAttribute("aria-hidden", "true");
+          fig.appendChild(playIcon);
+
+          vid.addEventListener("error", function () {
+            items = items.filter(function (x) { return x.id !== it.id; });
+            fig.remove();
+            updateEmptyState();
           });
-          fig.remove();
-          updateEmptyState();
-        });
-
-        fig.appendChild(img);
+        } else {
+          var img = document.createElement("img");
+          img.loading = "lazy";
+          img.src = it.src;
+          img.alt = "Zdjęcie z wesela";
+          img.addEventListener("error", function () {
+            items = items.filter(function (x) { return x.id !== it.id; });
+            fig.remove();
+            updateEmptyState();
+          });
+          fig.appendChild(img);
+        }
 
         if (it.pending) fig.classList.add("is-pending");
 
-        // usuwanie tylko w trybie lokalnym (moderacja własnych zdjęć);
-        // we wspólnej galerii moderację robicie w panelu Supabase
-        if (MODE === "local" && it.id) {
+        if (MODE === "local" && it.id && it.type !== "video") {
           var del = document.createElement("button");
           del.className = "gallery__item-del";
           del.type = "button";
-          del.setAttribute("aria-label", "Usuń zdjęcie");
+          del.setAttribute("aria-label", "Usuń");
           del.textContent = "×";
           del.addEventListener("click", function (e) {
             e.stopPropagation();
@@ -585,16 +667,19 @@
           fig.appendChild(del);
         }
 
-        img.addEventListener("click", function () {
-          // buduj listę na podstawie realnie wyświetlonych zdjęć,
-          // dzięki czemu usunięte/zepsute kafelki nie trafiają do lightboxa
-          var imgs = $$("#gallery-grid img");
-          var list = imgs.map(function (im) {
-            return im.src;
-          });
-          var i = imgs.indexOf(img);
-          openLightbox(list, i < 0 ? 0 : i);
+        fig.addEventListener("click", function (e) {
+          if (e.target.closest && e.target.closest(".gallery__item-del")) return;
+          if (it.pending) return;
+          var mediaList = order
+            .filter(function (o) { return !o.pending; })
+            .map(function (o) { return { src: o.src, type: o.type || "image" }; });
+          var mediaIdx = 0;
+          for (var mi = 0; mi < mediaList.length; mi++) {
+            if (mediaList[mi].src === it.src) { mediaIdx = mi; break; }
+          }
+          openLightbox(mediaList, mediaIdx);
         });
+
         grid.appendChild(fig);
       });
       updateEmptyState();
@@ -606,7 +691,7 @@
       load();
     }
 
-    return { init: init, add: add, remove: remove };
+    return { init: init, add: add, addVideo: addVideo, remove: remove };
   })();
 
   function initGallery() {
@@ -614,12 +699,13 @@
   }
 
   /* ===================== LIGHTBOX ===================== */
-  var _lightbox, _lightboxImg, _lbCounter, _lbPrev, _lbNext;
+  var _lightbox, _lightboxImg, _lightboxVideo, _lbCounter, _lbPrev, _lbNext;
   var _lbList = [],
     _lbIndex = 0;
   function initLightbox() {
     _lightbox = $("#lightbox");
     _lightboxImg = $("#lightbox-img");
+    _lightboxVideo = $("#lightbox-video");
     _lbCounter = $("#lightbox-counter");
     _lbPrev = $("#lightbox-prev");
     _lbNext = $("#lightbox-next");
@@ -647,8 +733,10 @@
   }
   function openLightbox(list, index) {
     if (!_lightbox) return;
-    // wsteczna zgodność: gdy podano pojedynczy src (string)
-    _lbList = typeof list === "string" ? [list] : list || [];
+    if (typeof list === "string") list = [{ src: list, type: "image" }];
+    _lbList = (list || []).map(function (item) {
+      return typeof item === "string" ? { src: item, type: "image" } : item;
+    });
     _lbIndex = index || 0;
     if (!_lbList.length) return;
     showLightbox();
@@ -656,9 +744,28 @@
   }
   function showLightbox() {
     if (!_lbList.length) return;
-    if (_lbIndex < 0) _lbIndex = _lbList.length - 1; // zawijanie
+    if (_lbIndex < 0) _lbIndex = _lbList.length - 1;
     if (_lbIndex >= _lbList.length) _lbIndex = 0;
-    _lightboxImg.src = _lbList[_lbIndex];
+
+    var item = _lbList[_lbIndex];
+    var isVideo = item.type === "video";
+
+    if (_lightboxVideo) {
+      _lightboxVideo.pause();
+      if (isVideo) {
+        _lightboxImg.hidden = true;
+        _lightboxVideo.hidden = false;
+        _lightboxVideo.src = item.src;
+      } else {
+        _lightboxVideo.hidden = true;
+        _lightboxVideo.src = "";
+        _lightboxImg.hidden = false;
+        _lightboxImg.src = item.src;
+      }
+    } else {
+      _lightboxImg.src = item.src;
+    }
+
     var multi = _lbList.length > 1;
     if (_lbCounter)
       _lbCounter.textContent = multi
@@ -675,6 +782,12 @@
     if (!_lightbox) return;
     _lightbox.hidden = true;
     _lightboxImg.src = "";
+    _lightboxImg.hidden = false;
+    if (_lightboxVideo) {
+      _lightboxVideo.pause();
+      _lightboxVideo.src = "";
+      _lightboxVideo.hidden = true;
+    }
     _lbList = [];
   }
 })();
