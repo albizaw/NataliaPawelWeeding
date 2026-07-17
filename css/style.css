@@ -764,7 +764,8 @@ img { max-width: 100%; display: block; }
 .gallery__item:hover .gallery__item-del { opacity: 1; }
 .gallery__item-del:hover { background: var(--accent); }
 .gallery__item.is-pending { opacity: .75; }
-.gallery__item.is-pending img { filter: brightness(.7); }
+.gallery__item.is-pending img,
+.gallery__item.is-pending video { filter: brightness(.55); }
 .gallery__item.is-pending::before {
   content: "";
   position: absolute; top: 50%; left: 50%;
@@ -773,16 +774,47 @@ img { max-width: 100%; display: block; }
   border: 3px solid rgba(255,255,255,.35);
   border-top-color: #e7c987;
   animation: spin .8s linear infinite;
-  z-index: 2;
+  z-index: 4;
 }
 .gallery__item.is-pending::after {
   content: "wysyłanie…";
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 6px 8px; font-size: .72rem; letter-spacing: .04em;
   color: #fff; background: rgba(40,26,16,.6); text-align: center;
+  z-index: 4;
 }
-.gallery__item--video.is-pending::after { content: "wysyłanie filmu…"; }
 .gallery__item--video.is-pending .gallery__play { display: none; }
+.gallery__item--video.is-pending::before { display: none; }
+.gallery__item--video.is-pending::after { display: none; }
+
+/* Progress bar for video upload */
+.gallery__progress {
+  position: absolute;
+  left: 14px; right: 14px; bottom: 16px;
+  height: 6px;
+  background: rgba(255,255,255,.18);
+  border-radius: 3px;
+  overflow: hidden;
+  z-index: 5;
+}
+.gallery__progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--gold), #e7c987);
+  border-radius: 3px;
+  transition: width .15s linear;
+}
+.gallery__progress-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-shadow: 0 2px 8px rgba(0,0,0,.6);
+  z-index: 5;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Spinner obok statusu podczas przetwarzania/wysyłania */

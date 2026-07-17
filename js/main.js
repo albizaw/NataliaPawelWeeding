@@ -32,9 +32,6 @@
   var STORAGE_KEY = "np_wedding_gallery_v1";
   var MAX_EDGE = 2000; // maks. dłuższy bok zapisywanego zdjęcia (px)
   var JPEG_QUALITY = 0.86;
-  var MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // odrzuć pliki > 20 MB (przed skalowaniem)
-  var MAX_VIDEO_BYTES = 50 * 1024 * 1024;
-
   var MODE =
     SUPABASE_URL && SUPABASE_ANON_KEY
       ? "supabase"
@@ -257,29 +254,16 @@
 
     function handleFiles(fileList) {
       var all = Array.prototype.slice.call(fileList);
-      var imageFiles = all.filter(function (f) { return /^image\//.test(f.type); });
-      var videoFiles = all.filter(function (f) { return /^video\//.test(f.type); });
+      var images = all.filter(function (f) { return /^image\//.test(f.type); });
+      var videos = all.filter(function (f) { return /^video\//.test(f.type); });
 
-      if (!imageFiles.length && !videoFiles.length) {
+      if (!images.length && !videos.length) {
         setStatus("Wybierz pliki ze zdjęciami lub filmami 🙂");
         return;
       }
 
-      var images = imageFiles.filter(function (f) { return f.size <= MAX_UPLOAD_BYTES; });
-      var videos = videoFiles.filter(function (f) { return f.size <= MAX_VIDEO_BYTES; });
-      var skipped = (imageFiles.length - images.length) + (videoFiles.length - videos.length);
       var total = images.length + videos.length;
-
-      if (!total) {
-        setStatus("Pliki za duże (zdjęcia max 20 MB, filmy max 50 MB). Spróbuj mniejsze 🙂");
-        return;
-      }
-
-      setStatus(
-        "Przetwarzam " + total + " plik(ów)…" +
-        (skipped ? " (" + skipped + " pominięto — za duże)" : ""),
-        true
-      );
+      setStatus("Przetwarzam " + total + " plik(ów)…", true);
 
       var done = 0, ok = 0;
       function checkDone() {
@@ -446,7 +430,7 @@
         cb(null);
       });
   }
-  function sbUploadVideo(file, cb) {
+  function sbUploadVideo(file, onProgress, cb) {
     var ext = (file.name.match(/\.[^.]+$/) || [".mp4"])[0].toLowerCase();
     var name =
       "video-" +
@@ -454,28 +438,41 @@
       "-" +
       Math.random().toString(36).slice(2, 8) +
       ext;
-    fetch(
+    var url =
       SUPABASE_URL +
-        "/storage/v1/object/" +
-        SUPABASE_BUCKET +
-        "/" +
-        encodeURIComponent(name),
-      {
-        method: "POST",
-        headers: sbHeaders({
-          "Content-Type": file.type || "video/mp4",
-          "cache-control": "3600",
-          "x-upsert": "false",
-        }),
-        body: file,
-      },
-    )
-      .then(function (r) {
-        cb(r.ok ? { id: name, src: sbPublicUrl(name), type: "video" } : null);
-      })
-      .catch(function () {
-        cb(null);
+      "/storage/v1/object/" +
+      SUPABASE_BUCKET +
+      "/" +
+      encodeURIComponent(name);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
+    xhr.setRequestHeader("Authorization", "Bearer " + SUPABASE_ANON_KEY);
+    xhr.setRequestHeader("Content-Type", file.type || "video/mp4");
+    xhr.setRequestHeader("cache-control", "3600");
+    xhr.setRequestHeader("x-upsert", "false");
+
+    if (onProgress) {
+      xhr.upload.addEventListener("progress", function (e) {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
       });
+    }
+
+    xhr.onload = function () {
+      cb(
+        xhr.status >= 200 && xhr.status < 300
+          ? { id: name, src: sbPublicUrl(name), type: "video" }
+          : null,
+      );
+    };
+    xhr.onerror = function () {
+      cb(null);
+    };
+
+    xhr.send(file);
   }
 
   /* ===================== GALERIA ===================== */
@@ -578,23 +575,36 @@
           src: objUrl,
           type: "video",
           pending: true,
-          _objUrl: objUrl,
+          progress: 0,
         };
         items.push(entry);
         render();
-        sbUploadVideo(file, function (res) {
-          var i = items.indexOf(entry);
-          URL.revokeObjectURL(objUrl);
-          if (res) {
-            if (i >= 0) items[i] = res;
-            else items.push(res);
-            if (cb) cb(true);
-          } else {
-            if (i >= 0) items.splice(i, 1);
-            if (cb) cb(false);
-          }
-          render();
-        });
+        sbUploadVideo(
+          file,
+          function onProgress(pct) {
+            entry.progress = pct;
+            if (!grid) return;
+            var fig = grid.querySelector('[data-id="' + entry.id + '"]');
+            if (!fig) return;
+            var fill = fig.querySelector(".gallery__progress-fill");
+            if (fill) fill.style.width = pct + "%";
+            var txt = fig.querySelector(".gallery__progress-text");
+            if (txt) txt.textContent = pct + "%";
+          },
+          function onDone(res) {
+            var i = items.indexOf(entry);
+            URL.revokeObjectURL(objUrl);
+            if (res) {
+              if (i >= 0) items[i] = res;
+              else items.push(res);
+              if (cb) cb(true);
+            } else {
+              if (i >= 0) items.splice(i, 1);
+              if (cb) cb(false);
+            }
+            render();
+          },
+        );
       } else {
         if (cb) cb(false);
       }
@@ -616,9 +626,10 @@
       if (!grid) return;
       grid.innerHTML = "";
       var order = items.slice().reverse();
-      order.forEach(function (it, idx) {
+      order.forEach(function (it) {
         var fig = document.createElement("figure");
         fig.className = "gallery__item";
+        fig.setAttribute("data-id", it.id);
 
         if (it.type === "video") {
           fig.classList.add("gallery__item--video");
@@ -652,7 +663,23 @@
           fig.appendChild(img);
         }
 
-        if (it.pending) fig.classList.add("is-pending");
+        if (it.pending) {
+          fig.classList.add("is-pending");
+          if (it.type === "video") {
+            var progressWrap = document.createElement("div");
+            progressWrap.className = "gallery__progress";
+            var progressFill = document.createElement("div");
+            progressFill.className = "gallery__progress-fill";
+            progressFill.style.width = (it.progress || 0) + "%";
+            progressWrap.appendChild(progressFill);
+            fig.appendChild(progressWrap);
+
+            var progressText = document.createElement("span");
+            progressText.className = "gallery__progress-text";
+            progressText.textContent = (it.progress || 0) + "%";
+            fig.appendChild(progressText);
+          }
+        }
 
         if (MODE === "local" && it.id && it.type !== "video") {
           var del = document.createElement("button");
