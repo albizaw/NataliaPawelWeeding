@@ -734,7 +734,7 @@
             fig.appendChild(vid);
           } else if (it.posterSrc) {
             var posterImg = document.createElement("img");
-            posterImg.loading = "lazy";
+            posterImg.decoding = "async";
             posterImg.src = it.posterSrc;
             posterImg.alt = "Podgląd wideo";
             posterImg.addEventListener("error", function () {
@@ -752,7 +752,7 @@
           fig.appendChild(playIcon);
         } else {
           var img = document.createElement("img");
-          img.loading = "lazy";
+          img.decoding = "async";
           img.alt = "Zdjęcie z wesela";
           var fullSrc = it.src;
           img.src = it.thumbSrc || fullSrc;
