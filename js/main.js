@@ -733,15 +733,7 @@
             vid.src = it.src + "#t=0.5";
             fig.appendChild(vid);
           } else if (it.posterSrc) {
-            var posterImg = document.createElement("img");
-            posterImg.decoding = "async";
-            posterImg.src = it.posterSrc;
-            posterImg.alt = "Podgląd wideo";
-            posterImg.addEventListener("error", function () {
-              posterImg.remove();
-              fig.classList.add("gallery__item--no-poster");
-            });
-            fig.appendChild(posterImg);
+            fig.style.backgroundImage = "url(" + it.posterSrc + ")";
           } else {
             fig.classList.add("gallery__item--no-poster");
           }
@@ -751,26 +743,10 @@
           playIcon.setAttribute("aria-hidden", "true");
           fig.appendChild(playIcon);
         } else {
-          var img = document.createElement("img");
-          img.decoding = "async";
-          img.alt = "Zdjęcie z wesela";
-          var fullSrc = it.src;
-          img.src = it.thumbSrc || fullSrc;
-          if (it.thumbSrc) {
-            img.addEventListener("error", function () {
-              if (img.src !== fullSrc) { img.src = fullSrc; return; }
-              items = items.filter(function (x) { return x.id !== it.id; });
-              fig.remove();
-              updateEmptyState();
-            });
-          } else {
-            img.addEventListener("error", function () {
-              items = items.filter(function (x) { return x.id !== it.id; });
-              fig.remove();
-              updateEmptyState();
-            });
-          }
-          fig.appendChild(img);
+          var displaySrc = it.thumbSrc || it.src;
+          fig.style.backgroundImage = "url(" + displaySrc + ")";
+          fig.setAttribute("role", "img");
+          fig.setAttribute("aria-label", "Zdjęcie z wesela");
         }
 
         if (it.pending) {
