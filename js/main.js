@@ -279,9 +279,9 @@
       }
 
       images.forEach(function (file) {
-        processImage(file, function (dataUrl) {
+        processImage(file, function (imageData) {
           done++;
-          if (dataUrl) { ok++; Gallery.add(dataUrl); }
+          if (imageData) { ok++; Gallery.add(imageData); }
           checkDone();
         });
       });
@@ -302,52 +302,51 @@
     }
   }
 
-  // Skalowanie + kompresja przed zapisem
-  function processImage(file, cb) {
-    var reader = new FileReader();
-    reader.onload = function () {
-      var img = new Image();
-      img.onload = function () {
-        var scale = Math.min(1, MAX_EDGE / Math.max(img.width, img.height));
-        var cw = Math.round(img.width * scale);
-        var ch = Math.round(img.height * scale);
-        var canvas = document.createElement("canvas");
-        canvas.width = cw;
-        canvas.height = ch;
-        var ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, cw, ch);
-        try {
-          cb(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
-        } catch (e) {
-          cb(null);
-        }
-      };
-      img.onerror = function () {
-        cb(null);
-      };
-      img.src = reader.result;
-    };
-    reader.onerror = function () {
-      cb(null);
-    };
-    reader.readAsDataURL(file);
+  function scaleToCanvas(img, maxEdge) {
+    var scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+    var cw = Math.round(img.width * scale);
+    var ch = Math.round(img.height * scale);
+    var canvas = document.createElement("canvas");
+    canvas.width = cw;
+    canvas.height = ch;
+    canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
+    return canvas;
   }
 
-  function generateThumb(fullDataUrl, cb) {
+  function processImage(file, cb) {
+    var url = URL.createObjectURL(file);
     var img = new Image();
     img.onload = function () {
-      var scale = Math.min(1, THUMB_EDGE / Math.max(img.width, img.height));
-      var cw = Math.round(img.width * scale);
-      var ch = Math.round(img.height * scale);
-      var canvas = document.createElement("canvas");
-      canvas.width = cw;
-      canvas.height = ch;
-      canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
-      try { cb(canvas.toDataURL("image/jpeg", THUMB_QUALITY)); }
-      catch (e) { cb(null); }
+      URL.revokeObjectURL(url);
+      var canvas = scaleToCanvas(img, MAX_EDGE);
+      if (MODE === "local") {
+        try { cb(canvas.toDataURL("image/jpeg", JPEG_QUALITY)); }
+        catch (e) { cb(null); }
+      } else {
+        canvas.toBlob(function (blob) { cb(blob || null); }, "image/jpeg", JPEG_QUALITY);
+      }
     };
-    img.onerror = function () { cb(null); };
-    img.src = fullDataUrl;
+    img.onerror = function () {
+      URL.revokeObjectURL(url);
+      cb(null);
+    };
+    img.src = url;
+  }
+
+  function generateThumb(source, cb) {
+    var url = source instanceof Blob ? URL.createObjectURL(source) : source;
+    var needRevoke = source instanceof Blob;
+    var img = new Image();
+    img.onload = function () {
+      if (needRevoke) URL.revokeObjectURL(url);
+      var canvas = scaleToCanvas(img, THUMB_EDGE);
+      canvas.toBlob(function (blob) { cb(blob || null); }, "image/jpeg", THUMB_QUALITY);
+    };
+    img.onerror = function () {
+      if (needRevoke) URL.revokeObjectURL(url);
+      cb(null);
+    };
+    img.src = url;
   }
 
   function generateVideoPoster(videoUrl, cb) {
@@ -369,8 +368,7 @@
       canvas.width = w;
       canvas.height = h;
       canvas.getContext("2d").drawImage(vid, 0, 0, w, h);
-      try { finish(canvas.toDataURL("image/jpeg", THUMB_QUALITY)); }
-      catch (e) { finish(null); }
+      canvas.toBlob(function (blob) { finish(blob || null); }, "image/jpeg", THUMB_QUALITY);
     };
     vid.onerror = function () { finish(null); };
     setTimeout(function () { finish(null); }, 8000);
@@ -467,13 +465,13 @@
         cb([]);
       });
   }
-  function sbUpload(dataUrl, cb) {
+  function sbUpload(imageData, cb) {
     var blob;
-    try {
-      blob = dataUrlToBlob(dataUrl);
-    } catch (e) {
-      cb(null);
-      return;
+    if (imageData instanceof Blob) {
+      blob = imageData;
+    } else {
+      try { blob = dataUrlToBlob(imageData); }
+      catch (e) { cb(null); return; }
     }
     var name =
       "photo-" +
@@ -490,7 +488,7 @@
       {
         method: "POST",
         headers: sbHeaders({
-          "Content-Type": blob.type,
+          "Content-Type": blob.type || "image/jpeg",
           "cache-control": "3600",
           "x-upsert": "false",
         }),
@@ -499,10 +497,8 @@
     )
       .then(function (r) {
         if (r.ok) {
-          generateThumb(dataUrl, function (thumbData) {
-            if (thumbData) {
-              try { sbUploadBlob(dataUrlToBlob(thumbData), "thumb-" + name); } catch (e) {}
-            }
+          generateThumb(blob, function (thumbBlob) {
+            if (thumbBlob) sbUploadBlob(thumbBlob, "thumb-" + name);
           });
           cb({ id: name, src: sbPublicUrl(name), thumbSrc: sbPublicUrl("thumb-" + name) });
         } else {
@@ -610,17 +606,20 @@
       }
     }
 
-    function add(dataUrl) {
+    function add(imageData) {
+      var isBlob = imageData instanceof Blob;
+      var previewSrc = isBlob ? URL.createObjectURL(imageData) : imageData;
       var entry = {
         id: "p" + Date.now() + "_" + Math.round(performance.now()),
-        src: dataUrl,
+        src: previewSrc,
         type: "image",
       };
       if (MODE === "supabase") {
         entry.pending = true;
         items.push(entry);
         render();
-        sbUpload(dataUrl, function (res) {
+        sbUpload(imageData, function (res) {
+          if (isBlob) URL.revokeObjectURL(previewSrc);
           var i = items.indexOf(entry);
           if (res) {
             res.type = "image";
@@ -635,7 +634,7 @@
         fetch(GALLERY_ENDPOINT, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: dataUrl }),
+          body: JSON.stringify({ image: imageData }),
         })
           .then(function () {
             load();
@@ -677,11 +676,11 @@
           function onDone(res) {
             var i = items.indexOf(entry);
             if (res) {
-              generateVideoPoster(objUrl, function (posterData) {
+              generateVideoPoster(objUrl, function (posterBlob) {
                 URL.revokeObjectURL(objUrl);
-                if (posterData) {
+                if (posterBlob) {
                   var stem = res.id.replace(/\.[^.]+$/, "");
-                  try { sbUploadBlob(dataUrlToBlob(posterData), "poster-" + stem + ".jpg"); } catch (e) {}
+                  sbUploadBlob(posterBlob, "poster-" + stem + ".jpg");
                   res.posterSrc = sbPublicUrl("poster-" + stem + ".jpg");
                 }
                 if (i >= 0) items[i] = res;
