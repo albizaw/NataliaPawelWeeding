@@ -32,6 +32,8 @@
   var STORAGE_KEY = "np_wedding_gallery_v1";
   var MAX_EDGE = 2000; // maks. dłuższy bok zapisywanego zdjęcia (px)
   var JPEG_QUALITY = 0.86;
+  var THUMB_EDGE = 400;
+  var THUMB_QUALITY = 0.7;
   var MODE =
     SUPABASE_URL && SUPABASE_ANON_KEY
       ? "supabase"
@@ -331,6 +333,50 @@
     reader.readAsDataURL(file);
   }
 
+  function generateThumb(fullDataUrl, cb) {
+    var img = new Image();
+    img.onload = function () {
+      var scale = Math.min(1, THUMB_EDGE / Math.max(img.width, img.height));
+      var cw = Math.round(img.width * scale);
+      var ch = Math.round(img.height * scale);
+      var canvas = document.createElement("canvas");
+      canvas.width = cw;
+      canvas.height = ch;
+      canvas.getContext("2d").drawImage(img, 0, 0, cw, ch);
+      try { cb(canvas.toDataURL("image/jpeg", THUMB_QUALITY)); }
+      catch (e) { cb(null); }
+    };
+    img.onerror = function () { cb(null); };
+    img.src = fullDataUrl;
+  }
+
+  function generateVideoPoster(videoUrl, cb) {
+    var vid = document.createElement("video");
+    vid.preload = "auto";
+    vid.muted = true;
+    vid.playsInline = true;
+    var done = false;
+    function finish(result) {
+      if (done) return;
+      done = true;
+      cb(result);
+    }
+    vid.onloadeddata = function () { vid.currentTime = 0.5; };
+    vid.onseeked = function () {
+      var w = Math.min(vid.videoWidth || 640, THUMB_EDGE);
+      var h = Math.round(w * ((vid.videoHeight || 480) / (vid.videoWidth || 640)));
+      var canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(vid, 0, 0, w, h);
+      try { finish(canvas.toDataURL("image/jpeg", THUMB_QUALITY)); }
+      catch (e) { finish(null); }
+    };
+    vid.onerror = function () { finish(null); };
+    setTimeout(function () { finish(null); }, 8000);
+    vid.src = videoUrl;
+  }
+
   /* ===================== SUPABASE (wspólna galeria) ===================== */
   function sbHeaders(extra) {
     var h = {
@@ -349,6 +395,17 @@
       encodeURIComponent(name)
     );
   }
+  function sbUploadBlob(blob, name) {
+    fetch(
+      SUPABASE_URL + "/storage/v1/object/" + SUPABASE_BUCKET + "/" + encodeURIComponent(name),
+      {
+        method: "POST",
+        headers: sbHeaders({ "Content-Type": blob.type, "cache-control": "3600", "x-upsert": "false" }),
+        body: blob,
+      }
+    );
+  }
+
   function dataUrlToBlob(dataUrl) {
     var parts = dataUrl.split(",");
     var mime = ((parts[0] || "").match(/:(.*?);/) || [])[1] || "image/jpeg";
@@ -371,21 +428,38 @@
         return r.ok ? r.json() : [];
       })
       .then(function (rows) {
+        var all = (rows || []).filter(function (o) {
+          return o && o.id && o.name && o.name.charAt(0) !== ".";
+        });
+        var thumbs = {};
+        var posters = {};
+        all.forEach(function (o) {
+          if (/^thumb-/i.test(o.name)) {
+            thumbs[o.name.replace(/^thumb-/i, "")] = sbPublicUrl(o.name);
+          } else if (/^poster-/i.test(o.name)) {
+            var stem = o.name.replace(/^poster-/i, "").replace(/\.[^.]+$/, "");
+            posters[stem] = sbPublicUrl(o.name);
+          }
+        });
         cb(
-          (rows || [])
+          all
             .filter(function (o) {
               return (
-                o &&
-                o.id &&
-                o.name &&
-                o.name.charAt(0) !== "." &&
+                !/^thumb-/i.test(o.name) &&
+                !/^poster-/i.test(o.name) &&
                 (/\.(jpe?g|png|gif|webp|avif|heic)$/i.test(o.name) ||
                  /\.(mp4|mov|webm|m4v|avi)$/i.test(o.name))
               );
             })
             .map(function (o) {
               var isVideo = /\.(mp4|mov|webm|m4v|avi)$/i.test(o.name);
-              return { id: o.name, src: sbPublicUrl(o.name), type: isVideo ? "video" : "image" };
+              var item = { id: o.name, src: sbPublicUrl(o.name), type: isVideo ? "video" : "image" };
+              if (!isVideo && thumbs[o.name]) item.thumbSrc = thumbs[o.name];
+              if (isVideo) {
+                var stem = o.name.replace(/\.[^.]+$/, "");
+                if (posters[stem]) item.posterSrc = posters[stem];
+              }
+              return item;
             }),
         );
       })
@@ -424,7 +498,16 @@
       },
     )
       .then(function (r) {
-        cb(r.ok ? { id: name, src: sbPublicUrl(name) } : null);
+        if (r.ok) {
+          generateThumb(dataUrl, function (thumbData) {
+            if (thumbData) {
+              try { sbUploadBlob(dataUrlToBlob(thumbData), "thumb-" + name); } catch (e) {}
+            }
+          });
+          cb({ id: name, src: sbPublicUrl(name), thumbSrc: sbPublicUrl("thumb-" + name) });
+        } else {
+          cb(null);
+        }
       })
       .catch(function () {
         cb(null);
@@ -593,16 +676,25 @@
           },
           function onDone(res) {
             var i = items.indexOf(entry);
-            URL.revokeObjectURL(objUrl);
             if (res) {
-              if (i >= 0) items[i] = res;
-              else items.push(res);
-              if (cb) cb(true);
+              generateVideoPoster(objUrl, function (posterData) {
+                URL.revokeObjectURL(objUrl);
+                if (posterData) {
+                  var stem = res.id.replace(/\.[^.]+$/, "");
+                  try { sbUploadBlob(dataUrlToBlob(posterData), "poster-" + stem + ".jpg"); } catch (e) {}
+                  res.posterSrc = sbPublicUrl("poster-" + stem + ".jpg");
+                }
+                if (i >= 0) items[i] = res;
+                else items.push(res);
+                if (cb) cb(true);
+                render();
+              });
             } else {
+              URL.revokeObjectURL(objUrl);
               if (i >= 0) items.splice(i, 1);
               if (cb) cb(false);
+              render();
             }
-            render();
           },
         );
       } else {
@@ -633,33 +725,52 @@
 
         if (it.type === "video") {
           fig.classList.add("gallery__item--video");
-          var vid = document.createElement("video");
-          vid.preload = "metadata";
-          vid.muted = true;
-          vid.playsInline = true;
-          vid.src = it.src + "#t=0.5";
-          fig.appendChild(vid);
+
+          if (it.pending) {
+            var vid = document.createElement("video");
+            vid.preload = "metadata";
+            vid.muted = true;
+            vid.playsInline = true;
+            vid.src = it.src + "#t=0.5";
+            fig.appendChild(vid);
+          } else if (it.posterSrc) {
+            var posterImg = document.createElement("img");
+            posterImg.loading = "lazy";
+            posterImg.src = it.posterSrc;
+            posterImg.alt = "Podgląd wideo";
+            posterImg.addEventListener("error", function () {
+              posterImg.remove();
+              fig.classList.add("gallery__item--no-poster");
+            });
+            fig.appendChild(posterImg);
+          } else {
+            fig.classList.add("gallery__item--no-poster");
+          }
 
           var playIcon = document.createElement("span");
           playIcon.className = "gallery__play";
           playIcon.setAttribute("aria-hidden", "true");
           fig.appendChild(playIcon);
-
-          vid.addEventListener("error", function () {
-            items = items.filter(function (x) { return x.id !== it.id; });
-            fig.remove();
-            updateEmptyState();
-          });
         } else {
           var img = document.createElement("img");
           img.loading = "lazy";
-          img.src = it.src;
           img.alt = "Zdjęcie z wesela";
-          img.addEventListener("error", function () {
-            items = items.filter(function (x) { return x.id !== it.id; });
-            fig.remove();
-            updateEmptyState();
-          });
+          var fullSrc = it.src;
+          img.src = it.thumbSrc || fullSrc;
+          if (it.thumbSrc) {
+            img.addEventListener("error", function () {
+              if (img.src !== fullSrc) { img.src = fullSrc; return; }
+              items = items.filter(function (x) { return x.id !== it.id; });
+              fig.remove();
+              updateEmptyState();
+            });
+          } else {
+            img.addEventListener("error", function () {
+              items = items.filter(function (x) { return x.id !== it.id; });
+              fig.remove();
+              updateEmptyState();
+            });
+          }
           fig.appendChild(img);
         }
 

@@ -727,6 +727,9 @@ img { max-width: 100%; display: block; }
 
 /* Video play overlay */
 .gallery__item--video { cursor: pointer; }
+.gallery__item--no-poster {
+  background: linear-gradient(135deg, #6b7c5e 0%, #3a2f24 100%);
+}
 .gallery__play {
   position: absolute;
   top: 50%; left: 50%;
